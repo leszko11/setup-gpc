@@ -1,0 +1,56 @@
+name: setup-gpc
+description: Install gpc and optionally initialize auth from a service account JSON payload.
+inputs:
+  version:
+    description: Release version to install, for example v1.2.3 or 1.2.3. Defaults to the latest GitHub release.
+    required: false
+    default: latest
+  repository:
+    description: Repository that publishes gpc release assets.
+    required: false
+    default: leszko11/google-play-console-cli
+  service-account-json:
+    description: Raw service account JSON content to persist and use with gpc auth init.
+    required: false
+    default: ""
+  profile:
+    description: gpc auth profile name to initialize.
+    required: false
+    default: default
+  developer-id:
+    description: Optional Play developer account ID to save with the profile.
+    required: false
+    default: ""
+outputs:
+  version:
+    description: Resolved gpc version that was installed.
+    value: ${{ steps.install.outputs.version }}
+  binary-path:
+    description: Full path to the installed gpc binary.
+    value: ${{ steps.install.outputs.binary-path }}
+  service-account-path:
+    description: Path to the persisted service account file when auth was configured.
+    value: ${{ steps.auth.outputs.service-account-path }}
+  auth-configured:
+    description: Whether auth init was executed.
+    value: ${{ steps.auth.outputs.auth-configured }}
+runs:
+  using: composite
+  steps:
+    - name: Install gpc
+      id: install
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_REPOSITORY: ${{ inputs.repository }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: ${{ github.action_path }}/scripts/install.sh
+    - name: Initialize auth
+      id: auth
+      shell: bash
+      env:
+        INPUT_SERVICE_ACCOUNT_JSON: ${{ inputs.service-account-json }}
+        INPUT_PROFILE: ${{ inputs.profile }}
+        INPUT_DEVELOPER_ID: ${{ inputs.developer-id }}
+        GPC_BINARY_PATH: ${{ steps.install.outputs.binary-path }}
+      run: ${{ github.action_path }}/scripts/auth.sh
