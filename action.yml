@@ -41,16 +41,30 @@ runs:
       id: install
       shell: bash
       env:
+        ACTION_PATH: ${{ github.action_path }}
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_REPOSITORY: ${{ inputs.repository }}
         GITHUB_TOKEN: ${{ github.token }}
-      run: ${{ github.action_path }}/scripts/install.sh
+      run: |
+        set -euo pipefail
+        script_root="${ACTION_PATH}"
+        if command -v cygpath >/dev/null 2>&1; then
+          script_root="$(cygpath -u "${ACTION_PATH}")"
+        fi
+        "${script_root}/scripts/install.sh"
     - name: Initialize auth
       id: auth
       shell: bash
       env:
+        ACTION_PATH: ${{ github.action_path }}
         INPUT_SERVICE_ACCOUNT_JSON: ${{ inputs.service-account-json }}
         INPUT_PROFILE: ${{ inputs.profile }}
         INPUT_DEVELOPER_ID: ${{ inputs.developer-id }}
         GPC_BINARY_PATH: ${{ steps.install.outputs.binary-path }}
-      run: ${{ github.action_path }}/scripts/auth.sh
+      run: |
+        set -euo pipefail
+        script_root="${ACTION_PATH}"
+        if command -v cygpath >/dev/null 2>&1; then
+          script_root="$(cygpath -u "${ACTION_PATH}")"
+        fi
+        "${script_root}/scripts/auth.sh"
